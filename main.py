@@ -1,12 +1,13 @@
 import argparse
+import unittest
 
-from api_client import ApiClient
-from db import get_connection
+from connections.api_client import ApiClient
+from connections.db import get_connection
 from models.user import import_users
 from models.roster import import_rosters, get_rosters
 from models.player import get_player, import_players
 from models.matchup import import_matchups
-from stats_module import TeamMetricsModule, MatchMetricsModule
+from logic.stats_module import TeamMetricsModule, MatchMetricsModule
 
 def setup(client, db, args):
     import_users(db, client.get('/users'))
@@ -50,7 +51,7 @@ def show_rankings(client, db, args):
     rosters = get_rosters(db)
     for roster in rosters:
         metrics = TeamMetricsModule(db, roster.roster_id)
-        print(metrics.team_name() + ': ' + str(metrics.power_ranking()))
+        print(metrics.team_name() + ': ' + str(metrics.power_ranking(client.week)))
 
 
 def show_paper_metrics(client, db, args):
@@ -68,11 +69,15 @@ def status(client, db, args):
     print('league id -' + client.league_id)
 
 
+def run_tests(client, db, args):
+    suite = unittest.TestLoader().discover(start_dir="tests", pattern="*_test.py")
+    unittest.TextTestRunner(verbosity=2).run(suite)
+
+
 def build_parser():
     parser = argparse.ArgumentParser(description="Fantasy bot CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    stats_parser = subparsers.add_parser("stats", help="Show stats")
     subparsers.add_parser("moves", help="Show moves")
     subparsers.add_parser("rankings", help="Show rankings")
     subparsers.add_parser("setup", help="Set up data")
@@ -80,6 +85,7 @@ def build_parser():
     subparsers.add_parser("status", help="Data about current settings")
     subparsers.add_parser("matchups", help="Import matchups for current week")
     subparsers.add_parser("weekly_metrics", help="high, low scorers, closest game for current week")
+    subparsers.add_parser("tests", help="Run all unit tests")
 
     return parser
 
@@ -92,6 +98,7 @@ COMMANDS = {
     "setup": setup,
     "update": update,
     "matchups": update_matchups,
+    "tests": run_tests,
 }
 
 

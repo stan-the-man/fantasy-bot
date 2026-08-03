@@ -1,4 +1,4 @@
-from db import get_connection
+from connections.db import get_connection
 from models.roster import get_roster, get_rosters
 from models.matchup import get_matchup, get_all_matchups_except_roster_for_week, get_top_scoring_matchup, get_lowest_scoring_matchup, get_closest_scoring_matchup
 from models.user import get_user
@@ -29,8 +29,8 @@ class TeamMetricsModule:
         user = get_user(self.db, self.roster.owner_id)
         return user.team_name()
 
-    def power_ranking(self):
-        return round(self.win_percentage() + (self.point_diff() * .25) + (self.points_for_normalized() * .5), 2)
+    def power_ranking(self, week):
+        return round(self.win_percentage(week) + (self.point_diff() * .25) + (self.points_for_normalized() * .5), 2)
 
     def effective_wins_and_losses(self, week):
         # weeks are 1 indexed

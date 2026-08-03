@@ -4,9 +4,9 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from db import get_test_connection
+from connections.db import get_test_connection
 from models.roster import get_rosters
-from stats_module import TeamMetricsModule
+from logic.stats_module import TeamMetricsModule
 
 
 # python3 -m unittest tests.team_metrics_unit_test -v
