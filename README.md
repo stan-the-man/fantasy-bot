@@ -63,6 +63,8 @@ network access.
 
 ## Running tests
 
+Tests use an old league where I hand-did the math using spreadsheets and manual data entry (thus we can verify the functions work). It has 5 weeks of matchup data stored in it, weeks 1-5.
+
 ```bash
 python3 main.py tests
 ```
