@@ -31,6 +31,7 @@ Notes:
 2. Only need to run `python3 main.py setup` once during week 1. After that can use `python3 main.py update`.
 3. You will need to update week after Monday's games finish so that update command catches new matchup information.
 4. Sleeper api docs: https://docs.sleeper.com/#introduction
+5. For information on how the metrics are calculated, see METRICS.md
 
 All commands are run through `main.py`:
 
