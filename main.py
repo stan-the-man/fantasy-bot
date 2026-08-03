@@ -105,8 +105,9 @@ COMMANDS = {
 def main():
     parser = build_parser()
     args = parser.parse_args()
-
-    client = ApiClient(week=1)
+    league_id = ''
+    week = 1
+    client = ApiClient(league_id, week)
     db = get_connection()
     try:
         COMMANDS[args.command](client, db, args)
