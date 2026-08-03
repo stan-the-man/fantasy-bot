@@ -4,7 +4,7 @@ import requests
 class ApiClient:
     def __init__(self, league_id, week=1, use_test=False, headers=None, timeout=10):
         self.week = week
-        self.league_id = leauge_id if not use_test else '1266106052584165376'
+        self.league_id = league_id if not use_test else '1266106052584165376'
         self.base_url = 'https://api.sleeper.app/v1/league/'+ self.league_id
         self.session = requests.Session()
         if headers:

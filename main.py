@@ -1,5 +1,8 @@
 import argparse
+import os
 import unittest
+
+from dotenv import load_dotenv
 
 from connections.api_client import ApiClient
 from connections.db import get_connection
@@ -65,7 +68,7 @@ def show_paper_metrics(client, db, args):
 
 
 def status(client, db, args):
-    print('week - ' + client.week)
+    print('week - ' + str(client.week))
     print('league id -' + client.league_id)
 
 
@@ -105,8 +108,9 @@ COMMANDS = {
 def main():
     parser = build_parser()
     args = parser.parse_args()
-    league_id = ''
-    week = 1
+    load_dotenv()
+    league_id = os.environ['LEAGUE_ID']
+    week = int(os.environ['WEEK'])
     client = ApiClient(league_id, week)
     db = get_connection()
     try:
