@@ -30,7 +30,7 @@ class User:
             display_name=data.get("display_name"),
             avatar=data.get("avatar"),
             metadata=data.get("metadata") or {},
-            is_owner=data.get("is_owner", False),
+            is_owner=bool(data.get("is_owner")),
         )
 
     def save(self, db):

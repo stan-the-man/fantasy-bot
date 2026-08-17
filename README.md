@@ -4,9 +4,12 @@ CLI tool that pulls league data from the Sleeper API, stores it in a local SQLit
 database, and prints stats/rankings computed from that data.
 
 ## Requirements
-- sqlite3
+- python3 (with the `venv` module; on Debian/Ubuntu: `sudo apt install python3-venv`)
 - pip
-- python3
+
+The database is SQLite via Python's built-in `sqlite3` module, so no separate
+sqlite3 install is needed. The `sqlite3` CLI is only useful if you want to
+inspect the db by hand.
 
 ## Setup
 
