@@ -59,7 +59,7 @@ python3 main.py <command>
 | `moves` | Shows the current week's waiver/free agent transactions (adds/drops), with player names resolved from the db. |
 | `rankings` | Prints each team's name and power ranking, computed from data already in the db. |
 | `weekly_metrics` | Prints the highest scorer, lowest scorer, and closest game for the current week. |
-| `status` | Prints the current week and league id. |
+| `status` | Prints the current week, how it was determined (explicit `WEEK`, inferred from Sleeper, or an out-of-season/offline fallback), and the league id. |
 | `tests` | Runs the full unit test suite under `tests/`. |
 
 Example:
@@ -69,12 +69,14 @@ python3 main.py setup
 python3 main.py rankings
 ```
 
-Commands that hit the live API (`setup`, `update`, `matchups`, `moves`) require
-network access.
+Network access: `setup`, `update`, `matchups`, and `moves` pull data from the
+live API and require it; `init` needs it to look up and validate leagues.
+Other commands make one small API call to look up the current week when `WEEK`
+isn't set, but fall back to local data if Sleeper is unreachable, so
+`rankings`, `weekly_metrics`, and `status` work offline. `tests` is fully
+offline.
 
 ## Running tests
-
-Tests use an old league where I hand-did the math using spreadsheets and manual data entry (thus we can verify the functions work). It has 5 weeks of matchup data stored in it, weeks 1-5.
 
 ```bash
 python3 main.py tests
@@ -85,6 +87,21 @@ or directly with `unittest`:
 ```bash
 python3 -m unittest discover tests -p "*_test.py"
 ```
+
+The suite needs no network or `.env` and covers a few areas:
+
+- Metrics tests run against `fantasy_bot_test.db`, a committed snapshot of an
+  old league (weeks 1-5) where I hand-did the math using spreadsheets and
+  manual data entry, so the expected values are independently verified.
+- Importer tests run against `tests/fixtures/*.json`, real Sleeper API
+  responses captured from that same league (display names anonymized to match
+  the test db).
+- Empty/partial-data and week-inference tests build in-memory databases and
+  fake API state, covering preseason and fresh-install behavior.
+
+The same suite runs in GitHub Actions on every push and pull request
+([.github/workflows/ci.yml](.github/workflows/ci.yml)), along with a
+byte-compile pass over all sources.
 
 ## Contributing
 Email me at `stan@waterfluence.com` if you have feature requests or wish to contribute

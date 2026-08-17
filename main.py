@@ -3,6 +3,7 @@ import os
 import sys
 import unittest
 
+import requests
 from dotenv import load_dotenv
 
 from connections.api_client import (
@@ -203,16 +204,21 @@ def main():
         week = int(week_env)
         week_source = 'set via WEEK'
     else:
-        week = infer_week(get_nfl_state())
+        try:
+            week = infer_week(get_nfl_state())
+            reason = 'out of season'
+        except requests.RequestException:
+            week = None
+            reason = 'Sleeper unreachable'
         if week is not None:
             week_source = 'inferred from current NFL week'
         else:
             week = last_week_with_matchups(db)
             if week is not None:
-                week_source = 'out of season; last week with local data'
+                week_source = f'{reason}; last week with local data'
             else:
                 week = 1
-                week_source = 'out of season, no local data; defaulting to 1'
+                week_source = f'{reason}, no local data; defaulting to 1'
 
     client = ApiClient(league_id, week)
     client.week_source = week_source
