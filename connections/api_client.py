@@ -1,18 +1,52 @@
 import requests
 
+BASE_URL = 'https://api.sleeper.app/v1'
+
+
+def _get(url, timeout=10):
+    response = requests.get(url, timeout=timeout)
+    response.raise_for_status()
+    return response.json()
+
+
+def get_nfl_state(timeout=10):
+    return _get(f'{BASE_URL}/state/nfl', timeout=timeout)
+
+
+def get_user_info(username_or_id, timeout=10):
+    return _get(f'{BASE_URL}/user/{username_or_id}', timeout=timeout)
+
+
+def get_user_leagues(user_id, season, timeout=10):
+    return _get(f'{BASE_URL}/user/{user_id}/leagues/nfl/{season}', timeout=timeout)
+
+
+def get_league_info(league_id, timeout=10):
+    return _get(f'{BASE_URL}/league/{league_id}', timeout=timeout)
+
+
+def infer_week(state):
+    # Sleeper's week field counts preseason weeks too; only trust it in-season
+    if state.get('season_type') not in ('regular', 'post'):
+        return 1
+    try:
+        return max(int(state.get('week') or 1), 1)
+    except (TypeError, ValueError):
+        return 1
+
 
 class ApiClient:
-    def __init__(self, league_id, week=1, use_test=False, headers=None, timeout=10):
+    def __init__(self, league_id, week=1, headers=None, timeout=10):
         self.week = week
-        self.league_id = league_id if not use_test else '1266106052584165376'
-        self.base_url = 'https://api.sleeper.app/v1/league/'+ self.league_id
+        self.league_id = league_id
+        self.base_url = f'{BASE_URL}/league/{self.league_id}'
         self.session = requests.Session()
         if headers:
             self.session.headers.update(headers)
         self.timeout = timeout
 
     def getPlayers(self, **kwargs):
-        playerUrl = 'https://api.sleeper.app/v1/players/nfl?active=true'
+        playerUrl = f'{BASE_URL}/players/nfl?active=true'
 
         response = self.session.get(playerUrl, params=None, timeout=self.timeout, **kwargs)
         response.raise_for_status()

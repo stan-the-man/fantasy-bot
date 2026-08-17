@@ -1,3 +1,5 @@
-WEEK=1
-# this is the league_id for the test db.
+# Run `python3 main.py init` to generate this file for your own league.
+# This LEAGUE_ID is the league the test db was built from.
 LEAGUE_ID=1266106052584165376
+# WEEK is inferred from the current NFL week automatically; uncomment to override.
+# WEEK=1

@@ -1,10 +1,18 @@
 import argparse
 import os
+import sys
 import unittest
 
 from dotenv import load_dotenv
 
-from connections.api_client import ApiClient
+from connections.api_client import (
+    ApiClient,
+    get_nfl_state,
+    get_user_info,
+    get_user_leagues,
+    get_league_info,
+    infer_week,
+)
 from connections.db import get_connection
 from models.user import import_users
 from models.roster import import_rosters, get_rosters
@@ -77,19 +85,79 @@ def show_paper_metrics(client, db, args):
 
 
 def status(client, db, args):
-    print('week - ' + str(client.week))
+    print(f"week - {client.week} ({getattr(client, 'week_source', 'unknown')})")
     print('league id - ' + client.league_id)
 
 
-def run_tests(client, db, args):
+def run_tests():
     suite = unittest.TestLoader().discover(start_dir="tests", pattern="*_test.py")
     unittest.TextTestRunner(verbosity=2).run(suite)
+
+
+def _existing_week_override():
+    if not os.path.exists('.env'):
+        return None
+    with open('.env') as f:
+        for line in f:
+            if line.strip().startswith('WEEK='):
+                return line.strip().split('=', 1)[1]
+    return None
+
+
+def _pick_league(username):
+    user = get_user_info(username)
+    state = get_nfl_state()
+    season = state.get('league_season') or state.get('season')
+    leagues = get_user_leagues(user['user_id'], season)
+    if not leagues:
+        season = str(int(season) - 1)
+        leagues = get_user_leagues(user['user_id'], season)
+    if not leagues:
+        print(f"No NFL leagues found for user '{username}'.")
+        sys.exit(1)
+    if len(leagues) == 1:
+        return leagues[0]['league_id']
+    for i, league in enumerate(leagues, 1):
+        print(f"{i}. {league['name']} ({league['season']}, id {league['league_id']})")
+    choice = int(input('Pick a league (number): '))
+    return leagues[choice - 1]['league_id']
+
+
+def run_init():
+    load_dotenv()
+    existing_league = os.environ.get('LEAGUE_ID')
+    week_override = _existing_week_override()
+
+    hint = f" (enter to keep {existing_league})" if existing_league else ""
+    entered = input(f"Sleeper username or league ID{hint}: ").strip()
+
+    if not entered and existing_league:
+        league_id = existing_league
+    elif entered.isdigit():
+        league_id = entered
+    elif entered:
+        league_id = _pick_league(entered)
+    else:
+        print('Nothing entered and no existing .env to keep.')
+        sys.exit(1)
+
+    league = get_league_info(league_id)
+    lines = [f"LEAGUE_ID={league_id}"]
+    if week_override:
+        lines.append(f"WEEK={week_override}")
+    else:
+        lines.append('# WEEK is inferred from the current NFL week; uncomment to override.')
+        lines.append('# WEEK=1')
+    with open('.env', 'w') as f:
+        f.write('\n'.join(lines) + '\n')
+    print(f"Wrote .env for league '{league['name']}' ({league_id}, {league['season']} season)")
 
 
 def build_parser():
     parser = argparse.ArgumentParser(description="Fantasy bot CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    subparsers.add_parser("init", help="Interactively create the .env file (league lookup by Sleeper username)")
     subparsers.add_parser("moves", help="Show moves")
     subparsers.add_parser("rankings", help="Show rankings")
     subparsers.add_parser("setup", help="Set up data")
@@ -110,17 +178,35 @@ COMMANDS = {
     "setup": setup,
     "update": update,
     "matchups": update_matchups,
-    "tests": run_tests,
 }
 
 
 def main():
     parser = build_parser()
     args = parser.parse_args()
+    if args.command == 'init':
+        run_init()
+        return
+    if args.command == 'tests':
+        run_tests()
+        return
+
     load_dotenv()
-    league_id = os.environ['LEAGUE_ID']
-    week = int(os.environ['WEEK'])
+    league_id = os.environ.get('LEAGUE_ID')
+    if not league_id:
+        print("LEAGUE_ID is not set. Run 'python3 main.py init' to create a .env file.")
+        sys.exit(1)
+
+    week_env = os.environ.get('WEEK')
+    if week_env:
+        week = int(week_env)
+        week_source = 'set via WEEK'
+    else:
+        week = infer_week(get_nfl_state())
+        week_source = 'inferred from current NFL week'
+
     client = ApiClient(league_id, week)
+    client.week_source = week_source
     db = get_connection()
     try:
         COMMANDS[args.command](client, db, args)

@@ -28,11 +28,15 @@ To leave the virtual environment later, run `deactivate`.
 ## Usage
 
 Notes:
-1. Make sure you have set your week and your league_id in a `.env` file.
-  - league_id can be found in the general settings for your league in sleeper app.
-  - week defaults at 1.
-2. Only need to run `python3 main.py setup` once during week 1. After that can use `python3 main.py update`.
-3. You will need to update week after Monday's games finish so that update command catches new matchup information.
+1. Run `python3 main.py init` to create your `.env`. Enter your Sleeper username
+   and pick your league from the list, or paste a league id directly (found in
+   the general settings for your league in the Sleeper app, or in the league URL
+   on sleeper.com).
+2. The current week is inferred automatically from Sleeper's NFL state, so
+   there's nothing to update week to week. To pin a specific week (e.g. to
+   recompute an old week's metrics), set `WEEK=<n>` in `.env` or on the command
+   line: `WEEK=5 python3 main.py rankings`.
+3. Only need to run `python3 main.py setup` once. After that use `python3 main.py update`.
 4. Sleeper api docs: https://docs.sleeper.com/#introduction
 5. For information on how the metrics are calculated, see METRICS.md
 
@@ -46,6 +50,7 @@ python3 main.py <command>
 
 | Command | Description |
 | --- | --- |
+| `init` | Interactively creates the `.env` file: looks up your leagues by Sleeper username (or takes a league id directly) and saves your choice. |
 | `setup` | Pulls users, rosters, matchups (current week), and players from the Sleeper API and imports them into the local SQLite db. Run this only once when first setting things up. |
 | `update` | Refreshes rosters and matchups from the API. |
 | `matchups` | Imports matchups for the current week only. |
