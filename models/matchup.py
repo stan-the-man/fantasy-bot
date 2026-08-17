@@ -100,6 +100,11 @@ def count_matchups_for_week(db, week):
     ).fetchone()[0]
 
 
+def last_week_with_matchups(db):
+    db.execute(CREATE_TABLE_SQL)
+    return db.execute("SELECT MAX(week) FROM matchups").fetchone()[0]
+
+
 def get_matchups_for_roster(db, roster_id):
     rows = db.execute(
         "SELECT * FROM matchups WHERE roster_id = ?", (roster_id,)

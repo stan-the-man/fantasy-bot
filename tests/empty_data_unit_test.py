@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from connections.db import get_connection
 from models import matchup, roster, user
-from models.matchup import Matchup, get_matchup, count_matchups_for_week
+from models.matchup import Matchup, get_matchup, count_matchups_for_week, last_week_with_matchups
 from models.roster import Roster
 from models.user import User
 from logic.stats_module import TeamMetricsModule, MatchMetricsModule
@@ -45,6 +45,9 @@ class EmptyDbTest(unittest.TestCase):
 
     def test_count_matchups_for_week_is_zero(self):
         self.assertEqual(count_matchups_for_week(self.db, 1), 0)
+
+    def test_last_week_with_matchups_is_none(self):
+        self.assertIsNone(last_week_with_matchups(self.db))
 
     def test_match_metrics_return_none(self):
         metrics = MatchMetricsModule(self.db, 1)
@@ -87,6 +90,11 @@ class PartialDataTest(unittest.TestCase):
     def test_missing_week_contributes_nothing_to_record(self):
         metrics = TeamMetricsModule(self.db, 1)
         self.assertEqual(metrics.effective_wins_and_losses_for_week(3), (0, 0))
+
+    def test_last_week_with_matchups_finds_latest(self):
+        self.assertEqual(last_week_with_matchups(self.db), 1)
+        Matchup(roster_id=1, week=4, matchup_id=1, points=0.0).save(self.db)
+        self.assertEqual(last_week_with_matchups(self.db), 4)
 
 
 if __name__ == "__main__":

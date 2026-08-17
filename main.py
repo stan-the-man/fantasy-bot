@@ -17,7 +17,7 @@ from connections.db import get_connection
 from models.user import import_users
 from models.roster import import_rosters, get_rosters
 from models.player import get_player, import_players
-from models.matchup import import_matchups, count_matchups_for_week
+from models.matchup import import_matchups, count_matchups_for_week, last_week_with_matchups
 from logic.stats_module import TeamMetricsModule, MatchMetricsModule, max_points_for
 
 def setup(client, db, args):
@@ -197,17 +197,25 @@ def main():
         print("LEAGUE_ID is not set. Run 'python3 main.py init' to create a .env file.")
         sys.exit(1)
 
+    db = get_connection()
     week_env = os.environ.get('WEEK')
     if week_env:
         week = int(week_env)
         week_source = 'set via WEEK'
     else:
         week = infer_week(get_nfl_state())
-        week_source = 'inferred from current NFL week'
+        if week is not None:
+            week_source = 'inferred from current NFL week'
+        else:
+            week = last_week_with_matchups(db)
+            if week is not None:
+                week_source = 'out of season; last week with local data'
+            else:
+                week = 1
+                week_source = 'out of season, no local data; defaulting to 1'
 
     client = ApiClient(league_id, week)
     client.week_source = week_source
-    db = get_connection()
     try:
         COMMANDS[args.command](client, db, args)
     finally:

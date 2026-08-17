@@ -26,9 +26,14 @@ def get_league_info(league_id, timeout=10):
 
 
 def infer_week(state):
-    # Sleeper's week field counts preseason weeks too; only trust it in-season
+    """Current fantasy week from Sleeper's NFL state, or None when out of season.
+
+    Sleeper's week field counts preseason weeks too, so it's only trusted
+    during the regular season and playoffs; callers decide the out-of-season
+    fallback (e.g. last week with local data).
+    """
     if state.get('season_type') not in ('regular', 'post'):
-        return 1
+        return None
     try:
         return max(int(state.get('week') or 1), 1)
     except (TypeError, ValueError):

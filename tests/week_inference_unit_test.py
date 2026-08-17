@@ -15,15 +15,17 @@ class WeekInferenceUnitTest(unittest.TestCase):
     def test_postseason_uses_state_week(self):
         self.assertEqual(infer_week({'season_type': 'post', 'week': 16}), 16)
 
-    def test_preseason_defaults_to_one(self):
+    def test_preseason_returns_none(self):
         # Sleeper counts preseason weeks in the same field; don't trust it
-        self.assertEqual(infer_week({'season_type': 'pre', 'week': 2}), 1)
+        self.assertIsNone(infer_week({'season_type': 'pre', 'week': 2}))
 
-    def test_offseason_defaults_to_one(self):
-        self.assertEqual(infer_week({'season_type': 'off', 'week': 0}), 1)
+    def test_offseason_returns_none(self):
+        self.assertIsNone(infer_week({'season_type': 'off', 'week': 0}))
 
-    def test_missing_or_bad_fields_default_to_one(self):
-        self.assertEqual(infer_week({}), 1)
+    def test_unknown_season_type_returns_none(self):
+        self.assertIsNone(infer_week({}))
+
+    def test_bad_week_in_season_defaults_to_one(self):
         self.assertEqual(infer_week({'season_type': 'regular'}), 1)
         self.assertEqual(infer_week({'season_type': 'regular', 'week': None}), 1)
         self.assertEqual(infer_week({'season_type': 'regular', 'week': 0}), 1)

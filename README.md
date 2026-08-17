@@ -33,9 +33,11 @@ Notes:
    the general settings for your league in the Sleeper app, or in the league URL
    on sleeper.com).
 2. The current week is inferred automatically from Sleeper's NFL state, so
-   there's nothing to update week to week. To pin a specific week (e.g. to
-   recompute an old week's metrics), set `WEEK=<n>` in `.env` or on the command
-   line: `WEEK=5 python3 main.py rankings`.
+   there's nothing to update week to week. Out of season (before kickoff or
+   after the season ends) it falls back to the last week with local matchup
+   data, or week 1 on a fresh db. To pin a specific week (e.g. to recompute an
+   old week's metrics), set `WEEK=<n>` in `.env` or on the command line:
+   `WEEK=5 python3 main.py rankings`.
 3. Only need to run `python3 main.py setup` once. After that use `python3 main.py update`.
 4. Sleeper api docs: https://docs.sleeper.com/#introduction
 5. For information on how the metrics are calculated, see METRICS.md
