@@ -69,7 +69,7 @@ def show_paper_metrics(client, db, args):
 
 def status(client, db, args):
     print('week - ' + str(client.week))
-    print('league id -' + client.league_id)
+    print('league id - ' + client.league_id)
 
 
 def run_tests(client, db, args):
