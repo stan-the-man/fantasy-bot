@@ -89,7 +89,15 @@ def get_matchup(db, roster_id, week):
     row = db.execute(
         "SELECT * FROM matchups WHERE roster_id = ? AND week = ?", (roster_id, week,)
     ).fetchone()
+    if row is None:
+        return None
     return _row_to_matchup(row)
+
+
+def count_matchups_for_week(db, week):
+    return db.execute(
+        "SELECT COUNT(*) FROM matchups WHERE week = ?", (week,)
+    ).fetchone()[0]
 
 
 def get_matchups_for_roster(db, roster_id):

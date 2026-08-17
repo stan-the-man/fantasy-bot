@@ -9,8 +9,8 @@ from connections.db import get_connection
 from models.user import import_users
 from models.roster import import_rosters, get_rosters
 from models.player import get_player, import_players
-from models.matchup import import_matchups
-from logic.stats_module import TeamMetricsModule, MatchMetricsModule
+from models.matchup import import_matchups, count_matchups_for_week
+from logic.stats_module import TeamMetricsModule, MatchMetricsModule, max_points_for
 
 def setup(client, db, args):
     import_users(db, client.get('/users'))
@@ -52,6 +52,12 @@ def show_moves(client, db, args):
 
 def show_rankings(client, db, args):
     rosters = get_rosters(db)
+    if not rosters:
+        print("No rosters imported yet. Run 'python3 main.py setup' first.")
+        return
+    if count_matchups_for_week(db, client.week) == 0 or max_points_for(db) == 0:
+        print(f"No scored games for week {client.week} yet. Run 'python3 main.py update' once games have been played.")
+        return
     for roster in rosters:
         metrics = TeamMetricsModule(db, roster.roster_id)
         print(metrics.team_name() + ': ' + str(metrics.power_ranking(client.week)))
@@ -59,6 +65,9 @@ def show_rankings(client, db, args):
 
 def show_paper_metrics(client, db, args):
     metrics = MatchMetricsModule(db, client.week)
+    if count_matchups_for_week(db, client.week) == 0:
+        print(f"No matchup data for week {client.week} yet. Run 'python3 main.py update' once games have been played.")
+        return
     [team, highScore] = metrics.highest_scorer()
     print('Highest scorer: ' + team + ': ' + str(highScore))
     [team, lowScore] = metrics.lowest_scorer()
