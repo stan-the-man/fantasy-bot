@@ -4,9 +4,12 @@ CLI tool that pulls league data from the Sleeper API, stores it in a local SQLit
 database, and prints stats/rankings computed from that data.
 
 ## Requirements
-- sqlite3
+- python3 (with the `venv` module; on Debian/Ubuntu: `sudo apt install python3-venv`)
 - pip
-- python3
+
+The database is SQLite via Python's built-in `sqlite3` module, so no separate
+sqlite3 install is needed. The `sqlite3` CLI is only useful if you want to
+inspect the db by hand.
 
 ## Setup
 
@@ -25,11 +28,17 @@ To leave the virtual environment later, run `deactivate`.
 ## Usage
 
 Notes:
-1. Make sure you have set your week and your league_id in a `.env` file.
-  - league_id can be found in the general settings for your league in sleeper app.
-  - week defaults at 1.
-2. Only need to run `python3 main.py setup` once during week 1. After that can use `python3 main.py update`.
-3. You will need to update week after Monday's games finish so that update command catches new matchup information.
+1. Run `python3 main.py init` to create your `.env`. Enter your Sleeper username
+   and pick your league from the list, or paste a league id directly (found in
+   the general settings for your league in the Sleeper app, or in the league URL
+   on sleeper.com).
+2. The current week is inferred automatically from Sleeper's NFL state, so
+   there's nothing to update week to week. Out of season (before kickoff or
+   after the season ends) it falls back to the last week with local matchup
+   data, or week 1 on a fresh db. To pin a specific week (e.g. to recompute an
+   old week's metrics), set `WEEK=<n>` in `.env` or on the command line:
+   `WEEK=5 python3 main.py rankings`.
+3. Only need to run `python3 main.py setup` once. After that use `python3 main.py update`.
 4. Sleeper api docs: https://docs.sleeper.com/#introduction
 5. For information on how the metrics are calculated, see METRICS.md
 
@@ -43,13 +52,14 @@ python3 main.py <command>
 
 | Command | Description |
 | --- | --- |
+| `init` | Interactively creates the `.env` file: looks up your leagues by Sleeper username (or takes a league id directly) and saves your choice. |
 | `setup` | Pulls users, rosters, matchups (current week), and players from the Sleeper API and imports them into the local SQLite db. Run this only once when first setting things up. |
 | `update` | Refreshes rosters and matchups from the API. |
 | `matchups` | Imports matchups for the current week only. |
 | `moves` | Shows the current week's waiver/free agent transactions (adds/drops), with player names resolved from the db. |
 | `rankings` | Prints each team's name and power ranking, computed from data already in the db. |
 | `weekly_metrics` | Prints the highest scorer, lowest scorer, and closest game for the current week. |
-| `status` | Prints the current week and league id. |
+| `status` | Prints the current week, how it was determined (explicit `WEEK`, inferred from Sleeper, or an out-of-season/offline fallback), and the league id. |
 | `tests` | Runs the full unit test suite under `tests/`. |
 
 Example:
@@ -59,12 +69,14 @@ python3 main.py setup
 python3 main.py rankings
 ```
 
-Commands that hit the live API (`setup`, `update`, `matchups`, `moves`) require
-network access.
+Network access: `setup`, `update`, `matchups`, and `moves` pull data from the
+live API and require it; `init` needs it to look up and validate leagues.
+Other commands make one small API call to look up the current week when `WEEK`
+isn't set, but fall back to local data if Sleeper is unreachable, so
+`rankings`, `weekly_metrics`, and `status` work offline. `tests` is fully
+offline.
 
 ## Running tests
-
-Tests use an old league where I hand-did the math using spreadsheets and manual data entry (thus we can verify the functions work). It has 5 weeks of matchup data stored in it, weeks 1-5.
 
 ```bash
 python3 main.py tests
@@ -75,6 +87,21 @@ or directly with `unittest`:
 ```bash
 python3 -m unittest discover tests -p "*_test.py"
 ```
+
+The suite needs no network or `.env` and covers a few areas:
+
+- Metrics tests run against `fantasy_bot_test.db`, a committed snapshot of an
+  old league (weeks 1-5) where I hand-did the math using spreadsheets and
+  manual data entry, so the expected values are independently verified.
+- Importer tests run against `tests/fixtures/*.json`, real Sleeper API
+  responses captured from that same league (display names anonymized to match
+  the test db).
+- Empty/partial-data and week-inference tests build in-memory databases and
+  fake API state, covering preseason and fresh-install behavior.
+
+The same suite runs in GitHub Actions on every push and pull request
+([.github/workflows/ci.yml](.github/workflows/ci.yml)), along with a
+byte-compile pass over all sources.
 
 ## Contributing
 Email me at `stan@waterfluence.com` if you have feature requests or wish to contribute

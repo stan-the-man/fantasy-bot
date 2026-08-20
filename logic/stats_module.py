@@ -52,6 +52,9 @@ class TeamMetricsModule:
 
     def effective_wins_and_losses_for_week(self, week):
         my_matchup = get_matchup(self.db, self.team_id, week)
+        if my_matchup is None:
+            # no data imported for this week; contributes nothing to the record
+            return 0, 0
         all_weekly_matches = get_all_matchups_except_roster_for_week(self.db, self.team_id, week)
         wins = 0
         losses = 0
@@ -80,12 +83,16 @@ class MatchMetricsModule:
 
     def highest_scorer(self):
         high_score = get_top_scoring_matchup(self.db, self.week)
+        if high_score is None:
+            return None
         team = get_roster(self.db, high_score.roster_id)
         player = get_user(self.db, team.owner_id)
         return player.team_name(), high_score.points
 
     def lowest_scorer(self):
         low_score = get_lowest_scoring_matchup(self.db, self.week)
+        if low_score is None:
+            return None
         team = get_roster(self.db, low_score.roster_id)
         player = get_user(self.db, team.owner_id)
         return player.team_name(), low_score.points

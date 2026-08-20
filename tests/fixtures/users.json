@@ -1,0 +1,222 @@
+[
+ {
+  "avatar": "f930bb1d74d32ae4ddd86a9d71ac3cd1",
+  "display_name": "WlGUDsOKGd",
+  "is_bot": null,
+  "is_owner": false,
+  "league_id": "1266106052584165376",
+  "metadata": {
+   "allow_pn": "on",
+   "archived": "off",
+   "league_report_pn": "off",
+   "mention_pn": "on",
+   "player_like_pn": "on",
+   "player_nickname_update": "off",
+   "team_name": "Odie\u2019s Nuts",
+   "team_name_update": "off",
+   "trade_block_pn": "on",
+   "transaction_commissioner": "on",
+   "transaction_free_agent": "on",
+   "transaction_trade": "on",
+   "transaction_waiver": "on",
+   "user_message_pn": "on"
+  },
+  "settings": null,
+  "user_id": "78982287362244608"
+ },
+ {
+  "avatar": "nfl_sf",
+  "display_name": "GHsiKPdQpB",
+  "is_bot": null,
+  "is_owner": false,
+  "league_id": "1266106052584165376",
+  "metadata": {
+   "allow_pn": "on",
+   "avatar": "https://sleepercdn.com/uploads/8bd27069f0b14d1467fcad40d93df9b7.jpg",
+   "mention_pn": "on",
+   "team_name": "TinTin"
+  },
+  "settings": null,
+  "user_id": "81956967736033280"
+ },
+ {
+  "avatar": "3ff34004f13a823510bc520d4f0c1c99",
+  "display_name": "sLQbGDeMKA",
+  "is_bot": false,
+  "is_owner": false,
+  "league_id": "1266106052584165376",
+  "metadata": {
+   "allow_pn": "off",
+   "archived": "on",
+   "avatar": "https://sleepercdn.com/uploads/8e87788590102e642ca47d5264b3a266.jpg",
+   "league_report_pn": "off",
+   "mention_pn": "on",
+   "player_like_pn": "off",
+   "player_nickname_update": "off",
+   "team_name": "I Love my McBride Moore",
+   "team_name_update": "off",
+   "trade_block_pn": "off",
+   "transaction_commissioner": "off",
+   "transaction_free_agent": "off",
+   "transaction_trade": "off",
+   "transaction_waiver": "off",
+   "user_message_pn": "off"
+  },
+  "settings": null,
+  "user_id": "339811600921862144"
+ },
+ {
+  "avatar": "d55d1f7075eda01948318de4af616075",
+  "display_name": "JFhIEuHbZC",
+  "is_bot": false,
+  "is_owner": false,
+  "league_id": "1266106052584165376",
+  "metadata": {
+   "allow_pn": "on",
+   "allow_sms": "on",
+   "mention_pn": "on",
+   "team_name": "Bishop Sycamore "
+  },
+  "settings": null,
+  "user_id": "473950126415540224"
+ },
+ {
+  "avatar": "b987f66667023baafadeb2051a35b7c1",
+  "display_name": "CSppycXPsq",
+  "is_bot": false,
+  "is_owner": false,
+  "league_id": "1266106052584165376",
+  "metadata": {
+   "allow_pn": "on",
+   "archived": "off",
+   "avatar": "https://sleepercdn.com/uploads/2e5576b8199a0b221d953f1e3ec71a8e.jpg",
+   "mention_pn": "on",
+   "team_name": "Bolton Sausage Company"
+  },
+  "settings": null,
+  "user_id": "479843548573724672"
+ },
+ {
+  "avatar": "b3338675f635c2c1f42b469621d38ec6",
+  "display_name": "LAQaXhqPvV",
+  "is_bot": false,
+  "is_owner": false,
+  "league_id": "1266106052584165376",
+  "metadata": {
+   "allow_pn": "on",
+   "mention_pn": "on",
+   "team_name": "Samwise GamCheese"
+  },
+  "settings": null,
+  "user_id": "868219026575380480"
+ },
+ {
+  "avatar": "4f4090e5e9c3941414db40a871e3e909",
+  "display_name": "edmABrlvST",
+  "is_bot": false,
+  "is_owner": false,
+  "league_id": "1266106052584165376",
+  "metadata": {
+   "allow_pn": "on",
+   "mention_pn": "on",
+   "team_name": "McLovin"
+  },
+  "settings": null,
+  "user_id": "933909017196400640"
+ },
+ {
+  "avatar": "664c27830fc085018917cba0cfe2d7f2",
+  "display_name": "pVnwelVQvS",
+  "is_bot": false,
+  "is_owner": false,
+  "league_id": "1266106052584165376",
+  "metadata": {
+   "allow_pn": "on",
+   "mention_pn": "on",
+   "team_name": "Bundlerooski of Hate"
+  },
+  "settings": null,
+  "user_id": "933943354709123072"
+ },
+ {
+  "avatar": "46a788a9cb934348b054b99e671484bc",
+  "display_name": "CdUAKNIRjF",
+  "is_bot": false,
+  "is_owner": true,
+  "league_id": "1266106052584165376",
+  "metadata": {
+   "allow_pn": "on",
+   "mention_pn": "on"
+  },
+  "settings": null,
+  "user_id": "995165913596878848"
+ },
+ {
+  "avatar": "06b72fa521372203e2e887e198b51e55",
+  "display_name": "fWTmhISjXI",
+  "is_bot": false,
+  "is_owner": false,
+  "league_id": "1266106052584165376",
+  "metadata": {
+   "allow_pn": "on",
+   "mention_pn": "on",
+   "team_name": "Santa"
+  },
+  "settings": null,
+  "user_id": "1266116820645990400"
+ },
+ {
+  "avatar": "d22e52781a5d7a94bcbf2aa70e748382",
+  "display_name": "ASpRvRaRnQ",
+  "is_bot": false,
+  "is_owner": false,
+  "league_id": "1266106052584165376",
+  "metadata": {
+   "allow_pn": "on",
+   "mention_pn": "on",
+   "team_name": "beelicious "
+  },
+  "settings": null,
+  "user_id": "1266155225610207232"
+ },
+ {
+  "avatar": "7572250c2fb084c434fed0e82229e183",
+  "display_name": "fzTjzBhOLq",
+  "is_bot": false,
+  "is_owner": false,
+  "league_id": "1266106052584165376",
+  "metadata": {
+   "allow_pn": "off",
+   "allow_sms": "on",
+   "avatar": "https://sleepercdn.com/uploads/b98a3423c96b918b893bea711f61c3f7",
+   "league_report_pn": "on",
+   "mascot_message": "off",
+   "mention_pn": "on",
+   "player_like_pn": "on",
+   "player_nickname_update": "off",
+   "team_name": "The Hut Hut Hike!",
+   "team_name_update": "off",
+   "trade_block_pn": "on",
+   "transaction_commissioner": "on",
+   "transaction_free_agent": "on",
+   "transaction_trade": "on",
+   "transaction_waiver": "on",
+   "user_message_pn": "off"
+  },
+  "settings": null,
+  "user_id": "1266249250212151296"
+ },
+ {
+  "avatar": "7572250c2fb084c434fed0e82229e183",
+  "display_name": "yXfXCWWuhB",
+  "is_bot": false,
+  "is_owner": false,
+  "league_id": "1266106052584165376",
+  "metadata": {
+   "allow_pn": "on",
+   "mention_pn": "on"
+  },
+  "settings": null,
+  "user_id": "1266575833275826176"
+ }
+]
