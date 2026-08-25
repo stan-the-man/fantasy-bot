@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from connections.db import get_test_connection
 from models.roster import get_rosters
-from logic.stats_module import MatchMetricsModule
+from logic.season_metrics import MatchMetricsModule
 
 
 # python3 -m unittest tests.matchmetrics_unit_test -v

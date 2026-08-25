@@ -12,7 +12,8 @@ from models import matchup, roster, user
 from models.matchup import Matchup, get_matchup, count_matchups_for_week, last_week_with_matchups
 from models.roster import Roster
 from models.user import User
-from logic.stats_module import TeamMetricsModule, MatchMetricsModule
+from logic.team_metrics import TeamMetricsModule
+from logic.season_metrics import MatchMetricsModule
 from main import show_rankings, show_paper_metrics
 
 

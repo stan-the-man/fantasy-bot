@@ -78,7 +78,7 @@ class ApiClient:
         return response.json()
 
     def getDraftPicks(self, draft_id, **kwargs):
-        draftPicksUrl = f'https://api.sleeper.app/v1/draft/{draft_id}/picks'
+        draftPicksUrl = f"{BASE_URL}/draft/{draft_id}/picks"
 
         self._rate_limit()
         response = self.session.get(draftPicksUrl, params=None, timeout=self.timeout, **kwargs)

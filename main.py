@@ -15,7 +15,9 @@ from connections.api_client import (
     infer_week,
 )
 from connections.db import get_connection
-from logic.stats_module import TeamMetricsModule, MatchMetricsModule, max_points_for
+from logic.team_metrics import TeamMetricsModule
+from logic.player_metrics import PlayerMetricsModule
+from logic.season_metrics import MatchMetricsModule, max_points_for
 from models.user import import_users
 from models.roster import import_rosters, get_rosters, get_roster
 from models.player import get_player, import_players
@@ -174,10 +176,11 @@ def player_profile_stats(client, db, args):
     rosters = get_rosters(db)
     for roster in rosters:
         metrics = TeamMetricsModule(db, roster.roster_id)
+        player_metrics = PlayerMetricsModule(db, roster.roster_id)
         print("Name: " + metrics.team_name())
-        #print("Draft Ability: " + str(metrics.draft_ability_score()))
-        print("Roster Management: " + str(metrics.roster_management_score()))
-        # print("Waiver And Trades: " + str(metrics.waiver_and_trades_score()))
+        print("Draft Ability: " + str(player_metrics.draft_ability_score()))
+        print("Roster Management: " + str(player_metrics.roster_management_score()))
+        print("Waiver And Trades: " + str(player_metrics.waiver_and_trades_score()))
 
 
 def status(client, db, args):

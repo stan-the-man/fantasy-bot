@@ -9,7 +9,8 @@ from dotenv import load_dotenv
 from connections.db import get_test_connection
 from models.roster import get_rosters
 from models.weekly_player_performance import WeeklyPlayerPerformance
-from logic.stats_module import TeamMetricsModule
+from logic.team_metrics import TeamMetricsModule
+from logic.player_metrics import PlayerMetricsModule
 
 load_dotenv()
 
@@ -158,7 +159,7 @@ class TeamMetricsUnitTest(unittest.TestCase):
             ).save(self.db)
 
         try:
-            metrics = TeamMetricsModule(self.db, 1)
+            metrics = PlayerMetricsModule(self.db, 1)
             self.assertEqual(4.7, metrics.roster_management_score())
         finally:
             for player_id in performance_points:
