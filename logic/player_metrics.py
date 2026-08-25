@@ -66,11 +66,11 @@ class PlayerMetricsModule:
         return round((points_scored + transactions), 1)
 
     def roster_management_score(self):
-        manager_scores = 0
+        weekly_ratios = []
         for week in range(1, 14):
             matchup = get_matchup(self.db, self.team_id, week)
             if matchup is None:
-                return 0
+                continue
 
             performances = get_performances_for_players(self.db, matchup.players, week, os.environ['SEASON'])
             keys = ['QB', 'RB1', 'RB2', 'WR1', 'WR2', 'FLEX', 'DST', 'K', 'TE']
@@ -134,11 +134,12 @@ class PlayerMetricsModule:
                 starter_value += starter_score
 
             if max_value == 0:
-                return 0
-            if ((starter_value / max_value)) > .9:
-                manager_scores += 1
+                continue
+            weekly_ratios.append(starter_value / max_value)
 
-        return round((manager_scores / 14) * 5, 1)
+        if not weekly_ratios:
+            return 0
+        return round((sum(weekly_ratios) / len(weekly_ratios)) * 5, 1)
 
     def player_win_multiplier(self, week):
         return 10 * self.team_metrics.win_percentage(week)
