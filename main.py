@@ -15,26 +15,70 @@ from connections.api_client import (
     infer_week,
 )
 from connections.db import get_connection
+from logic.team_metrics import TeamMetricsModule
+from logic.player_metrics import PlayerMetricsModule
+from logic.season_metrics import MatchMetricsModule, max_points_for
 from models.user import import_users
-from models.roster import import_rosters, get_rosters
+from models.roster import import_rosters, get_rosters, get_roster
 from models.player import get_player, import_players
 from models.matchup import import_matchups, count_matchups_for_week, last_week_with_matchups
-from logic.stats_module import TeamMetricsModule, MatchMetricsModule, max_points_for
+from models.matchup import import_matchups
+from models.league import import_league
+from models.draft_pick import import_draft_picks
+from models.transaction import import_transactions, get_transactions
+from models.weekly_player_performance import import_weekly_player_performance, get_weekly_player_performance
+
+def import_rostered_player_performances(client, db, rosters):
+    rostered_player_ids = {player_id for roster in rosters for player_id in roster.players}
+    for player_id in rostered_player_ids:
+        if get_weekly_player_performance(db, player_id, client.week, client.season) is not None:
+            continue
+        performance = client.getWeeklyPlayerPerformance(player_id)
+        if performance is not None:
+            import_weekly_player_performance(db, performance)
+
+
+def clear_league_scoped_tables(db):
+    # roster_id (and everything keyed off it) is only unique within a single league,
+    # so switching leagues without clearing these first pollutes stats with stale ids
+    tables = ['leagues', 'users', 'rosters', 'matchups', 'draft_picks', 'transactions']
+    for table in tables:
+        db.execute(f'DROP TABLE IF EXISTS {table}')
+    db.commit()
+
 
 def setup(client, db, args):
+    # each league has a roster id 1 -> 12. So when we run the setup command we need to clear
+    # all tables not related to player
+    clear_league_scoped_tables(db)
+    league = import_league(db, client.get(''))
     import_users(db, client.get('/users'))
-    import_rosters(db, client.get('/rosters'))
+    rosters = import_rosters(db, client.get('/rosters'))
     import_matchups(db, client.get('/matchups/' + str(client.week)), client.week)
-    import_players(db, client.getPlayers())
+    import_draft_picks(db, client.getDraftPicks(league.draft_id))
+    import_transactions(db, client.get('/transactions/' + str(client.week)))
+    # import_players(db, client.getPlayers())
+    # import_rostered_player_performances(client, db, rosters)
 
 
 def update(client, db, args):
-    import_rosters(db, client.get('/rosters'))
+    league = import_league(db, client.get(''))
+    rosters = import_rosters(db, client.get('/rosters'))
     import_matchups(db, client.get('/matchups/' + str(client.week)), client.week)
+    import_draft_picks(db, client.getDraftPicks(league.draft_id))
+    import_transactions(db, client.get('/transactions/' + str(client.week)))
+    import_rostered_player_performances(client, db, rosters)
 
 
 def update_matchups(client, db, args):
     import_matchups(db, client.get('/matchups/' + str(client.week)), client.week)
+
+
+def setup_past_league(client, db, args):
+    for week in range(1, 18):
+        import_matchups(db, client.get('/matchups/' + str(week)), week)
+        import_transactions(db, client.get('/transactions/' + str(week)))
+        print('imported week ' + str(week))
 
 
 def show_moves(client, db, args):
@@ -57,6 +101,50 @@ def show_moves(client, db, args):
         for budget in transaction['waiver_budget'] or []:
             print(budget)
     pass
+
+
+def trades(client, db, args):
+    transactions = get_transactions(db)
+    for transaction in transactions:
+        if transaction.type != 'trade':
+            continue
+
+        roster_ids = transaction.roster_ids
+        team_names = {
+            roster_id: TeamMetricsModule(db, roster_id).team_name()
+            for roster_id in roster_ids
+            if get_roster(db, roster_id) is not None
+        }
+
+        def player_name(player_id):
+            player = get_player(db, player_id)
+            return f"{player.first_name} {player.last_name}" if player else player_id
+
+        # group each traded player under the roster that gave it up
+        players_given_by_roster = {roster_id: [] for roster_id in roster_ids}
+        if transaction.drops:
+            for player_id, giving_roster_id in transaction.drops.items():
+                players_given_by_roster.setdefault(giving_roster_id, []).append(player_name(player_id))
+        elif transaction.adds and len(roster_ids) == 2:
+            for player_id, receiving_roster_id in transaction.adds.items():
+                giving_roster_id = next((r for r in roster_ids if r != receiving_roster_id), None)
+                if giving_roster_id is not None:
+                    players_given_by_roster.setdefault(giving_roster_id, []).append(player_name(player_id))
+
+        if len(roster_ids) == 2 and any(players_given_by_roster.values()):
+            roster_a, roster_b = roster_ids
+            name_a = team_names.get(roster_a, str(roster_a))
+            name_b = team_names.get(roster_b, str(roster_b))
+            players_a = ', '.join(players_given_by_roster.get(roster_a, [])) or 'nothing'
+            players_b = ', '.join(players_given_by_roster.get(roster_b, [])) or 'nothing'
+            print(f"{name_a} trades: {players_a} to {name_b} for: {players_b}")
+        else:
+            # more than two rosters involved, or no add/drop data to attribute a side to
+            player_ids = set(transaction.adds.keys()) | set(transaction.drops.keys())
+            if not player_ids:
+                player_ids = set(transaction.metadata.keys())
+            players = ', '.join(player_name(player_id) for player_id in player_ids)
+            print(' <-> '.join(team_names.values()) + ': ' + players)
 
 
 def show_rankings(client, db, args):
@@ -83,6 +171,16 @@ def show_paper_metrics(client, db, args):
     print('Lowest scorer: ' + team + ': ' + str(lowScore))
     ((teamA, scoreA), (teamB, scoreB)) = metrics.closest_score()
     print('Closest game: ' + teamA + ' vs ' + teamB + ' point diff: '+ str(round(scoreA - scoreB, 2)))
+
+def player_profile_stats(client, db, args):
+    rosters = get_rosters(db)
+    for roster in rosters:
+        metrics = TeamMetricsModule(db, roster.roster_id)
+        player_metrics = PlayerMetricsModule(db, roster.roster_id)
+        print("Name: " + metrics.team_name())
+        print("Draft Ability: " + str(player_metrics.draft_ability_score()))
+        print("Roster Management: " + str(player_metrics.roster_management_score()))
+        print("Waiver And Trades: " + str(player_metrics.waiver_and_trades_score()))
 
 
 def status(client, db, args):
@@ -167,6 +265,9 @@ def build_parser():
     subparsers.add_parser("matchups", help="Import matchups for current week")
     subparsers.add_parser("weekly_metrics", help="high, low scorers, closest game for current week")
     subparsers.add_parser("tests", help="Run all unit tests")
+    subparsers.add_parser("players", help="Get roster season stats")
+    subparsers.add_parser("trades", help="List all trade transactions")
+    subparsers.add_parser("setup_past_league", help="Import matchups and transactions for weeks 1-17")
 
     return parser
 
@@ -179,6 +280,10 @@ COMMANDS = {
     "setup": setup,
     "update": update,
     "matchups": update_matchups,
+    "tests": run_tests,
+    "players": player_profile_stats,
+    "trades": trades,
+    "setup_past_league": setup_past_league,
 }
 
 
@@ -198,8 +303,13 @@ def main():
         print("LEAGUE_ID is not set. Run 'python3 main.py init' to create a .env file.")
         sys.exit(1)
 
-    db = get_connection()
+    league_id = os.environ['LEAGUE_ID']
+    week = int(os.environ['WEEK'])
+    season = os.environ['SEASON']
     week_env = os.environ.get('WEEK')
+
+    client = ApiClient(league_id, week, season)
+    db = get_connection()
     if week_env:
         week = int(week_env)
         week_source = 'set via WEEK'

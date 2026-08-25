@@ -4,9 +4,15 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from dotenv import load_dotenv
+
 from connections.db import get_test_connection
 from models.roster import get_rosters
-from logic.stats_module import TeamMetricsModule
+from models.weekly_player_performance import WeeklyPlayerPerformance
+from logic.team_metrics import TeamMetricsModule
+from logic.player_metrics import PlayerMetricsModule
+
+load_dotenv()
 
 
 # python3 -m unittest tests.team_metrics_unit_test -v
@@ -122,6 +128,71 @@ class TeamMetricsUnitTest(unittest.TestCase):
             actual_pf = round(metrics.points_for_normalized(), 2)
             self.assertEqual(expected_pf, actual_pf)
 
+    def test_roster_management_score_keeps_max_value_on_position_collision(self):
+        # roster_management_score averages each week's (starter points / best-possible
+        # points) ratio across the weeks with matchup data, then scales to 5.
+        #
+        # week 1: 3 starter WRs (WR1/WR2/FLEX collision), 3 bench RBs and 3 bench WRs
+        # (RB1/RB2/FLEX and WR1/WR2/FLEX collisions, with both overflow groups
+        # competing for the single bench FLEX slot) -> ratio 103/125 = 0.824
+        #
+        # weeks 2 and 3: only the real starters for those weeks have performance data
+        # seeded (bench defaults to 0), so the lineup is trivially optimal -> ratio 1.0
+        # each
+        #
+        # average = (0.824 + 1.0 + 1.0) / 3 = 0.9413 -> * 5 = 4.7
+        season = os.environ['SEASON']
+        week_1_performance_points = {
+            # starters
+            '11539': 5.0,   # K
+            '11635': 12.0,  # WR -> WR1
+            '12518': 9.0,   # TE
+            '2216': 8.0,    # WR -> WR2 (bumped to FLEX by 9493)
+            '3198': 15.0,   # RB -> RB1
+            '4892': 20.0,   # QB
+            '8205': 10.0,   # RB -> RB2
+            '9493': 18.0,   # WR -> collides with WR2 (8.0), wins, bumps 2216's 8.0 to FLEX
+            'SF': 6.0,      # DEF -> DST
+            # bench
+            '10219': 3.0,   # RB -> RB1
+            '11626': 4.0,   # WR -> WR1
+            '1479': 22.0,   # WR -> WR2
+            '3163': 7.0,    # QB
+            '4018': 11.0,   # RB -> RB2
+            '7049': 2.0,    # WR -> collides with WR2 (22.0), loses, sent to FLEX
+            '7528': 25.0,   # RB -> collides with RB2 (11.0), wins, bumps 11.0 to FLEX
+        }
+        # real starters for roster 1, weeks 2 and 3 (bench intentionally left unseeded)
+        week_2_performance_points = {
+            '4892': 25.0, '3198': 18.0, '8205': 14.0, '9493': 20.0, '11635': 16.0,
+            '12518': 10.0, '2216': 12.0, '11539': 7.0, 'SF': 8.0,
+        }
+        week_3_performance_points = {
+            '4892': 22.0, '3198': 19.0, '8205': 13.0, '9493': 17.0, '11635': 15.0,
+            '12518': 11.0, '2216': 9.0, '11539': 6.0, 'SEA': 8.0,
+        }
+        weekly_performance_points = {
+            1: week_1_performance_points,
+            2: week_2_performance_points,
+            3: week_3_performance_points,
+        }
+        for week, performance_points in weekly_performance_points.items():
+            for player_id, points in performance_points.items():
+                WeeklyPlayerPerformance(
+                    player_id=player_id, week=week, season=season, stats={'pts_half_ppr': points}
+                ).save(self.db)
+
+        try:
+            metrics = PlayerMetricsModule(self.db, 1)
+            self.assertEqual(4.7, metrics.roster_management_score())
+        finally:
+            for week, performance_points in weekly_performance_points.items():
+                for player_id in performance_points:
+                    self.db.execute(
+                        "DELETE FROM weekly_player_performances WHERE player_id = ? AND week = ? AND season = ?",
+                        (player_id, week, season),
+                    )
+            self.db.commit()
 
 
 if __name__ == "__main__":
