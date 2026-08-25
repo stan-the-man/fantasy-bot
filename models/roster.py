@@ -120,3 +120,10 @@ def get_roster(db, roster_id):
 def get_rosters(db):
     rows = db.execute("SELECT * FROM rosters").fetchall()
     return [_row_to_roster(row) for row in rows]
+
+
+def get_drafted_players(db, roster_id):
+    rows = db.execute(
+        "SELECT player_id FROM draft_picks WHERE roster_id = ?", (str(roster_id),)
+    ).fetchall()
+    return [row["player_id"] for row in rows]

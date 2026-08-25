@@ -1,3 +1,6 @@
+import time
+from collections import deque
+
 import requests
 
 BASE_URL = 'https://api.sleeper.app/v1'
@@ -49,11 +52,47 @@ class ApiClient:
         if headers:
             self.session.headers.update(headers)
         self.timeout = timeout
+        self._call_times = deque()
+
+    MAX_CALLS_PER_SECOND = 10
+
+    def _rate_limit(self):
+        now = time.monotonic()
+        while self._call_times and now - self._call_times[0] > 1:
+            self._call_times.popleft()
+        if len(self._call_times) >= self.MAX_CALLS_PER_SECOND:
+            sleep_time = 1 - (now - self._call_times[0])
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+            now = time.monotonic()
+            while self._call_times and now - self._call_times[0] > 1:
+                self._call_times.popleft()
+        self._call_times.append(now)
 
     def getPlayers(self, **kwargs):
         playerUrl = f'{BASE_URL}/players/nfl?active=true'
 
+        self._rate_limit()
         response = self.session.get(playerUrl, params=None, timeout=self.timeout, **kwargs)
+        response.raise_for_status()
+        return response.json()
+
+    def getDraftPicks(self, draft_id, **kwargs):
+        draftPicksUrl = f'https://api.sleeper.app/v1/draft/{draft_id}/picks'
+
+        self._rate_limit()
+        response = self.session.get(draftPicksUrl, params=None, timeout=self.timeout, **kwargs)
+        response.raise_for_status()
+        return response.json()
+
+    def getWeeklyPlayerPerformance(self, player_id, week, season, **kwargs):
+        if week is None or season is None:
+            print('Need season and week')
+            return
+        performanceUrl = f'https://api.sleeper.app/stats/nfl/player/{player_id}?season_type=regular&season={season}&week={week}'
+
+        self._rate_limit()
+        response = self.session.get(performanceUrl, params=None, timeout=self.timeout, **kwargs)
         response.raise_for_status()
         return response.json()
 
@@ -61,6 +100,7 @@ class ApiClient:
         return f"{self.base_url}/{endpoint.lstrip('/')}"
 
     def get(self, endpoint, params=None, **kwargs):
+        self._rate_limit()
         response = self.session.get(self._url(endpoint), params=params, timeout=self.timeout, **kwargs)
         response.raise_for_status()
         return response.json()
